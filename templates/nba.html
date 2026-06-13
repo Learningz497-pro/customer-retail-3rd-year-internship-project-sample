@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Next Best Action — Smart Retail{% endblock %}
+{% block breadcrumb %}Goals & Target{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+  <div class="page-eyebrow">🚀 Strategic Recommendations</div>
+  <h1>Customer Next Best Action</h1>
+  <p>Identify the most impactful strategic steps to engage, retain, and grow your customer relationships.</p>
+</div>
+
+<!-- Search Panel -->
+<div class="search-panel">
+  <div class="search-title">Analyze a Customer</div>
+  <div class="search-sub">Enter a Customer ID to generate personalized strategic recommendations and impact scores.</div>
+  <form method="POST" action="{{ url_for('nba_route') }}" id="nbaForm">
+    <div class="search-row flex-wrap gap-2">
+      <div class="input-group-custom m-0" style="flex: 1; max-width: 320px;">
+        <input
+          type="text"
+          name="customer_id"
+          class="form-input-custom"
+          placeholder="e.g. 12415"
+          value="{{ customer_id or '' }}"
+          autocomplete="off"
+          autofocus
+        >
+        <i class="bi bi-search"></i>
+      </div>
+      <button type="submit" class="btn-indigo">
+        <i class="bi bi-rocket-takeoff"></i> Analyze
+      </button>
+      {% if customer_id %}
+      <a href="{{ url_for('nba_route') }}" class="btn-ghost">
+        <i class="bi bi-x-circle"></i> Clear
+      </a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- Validation Messages -->
+{% if error %}
+<div class="alert-box alert-warn mb-4">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  <span>{{ error }}</span>
+</div>
+{% endif %}
+
+<!-- Empty / Initial State -->
+{% if not actions and not error %}
+<div class="panel-card">
+  <div class="empty-state py-5" style="text-align: center;">
+    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;">🎯</div>
+    <h3>Start Your Strategy</h3>
+    <p class="text-muted" style="max-width: 420px; margin: 0 auto;">Enter a Customer ID above to generate Next Best Actions. Our engine analyzes RFM metrics and segment behavior to prioritize the most effective engagement strategies.</p>
+  </div>
+</div>
+{% endif %}
+
+<!-- Results -->
+{% if actions and customer %}
+
+<!-- Customer Summary Section -->
+<div class="profile-card mb-4">
+  <div class="d-flex align-items-center gap-3 flex-wrap">
+    <div class="profile-avatar">
+      <i class="bi bi-person-badge"></i>
+    </div>
+    <div class="flex-grow-1">
+      <h2 style="font-size: 1.35rem; margin: 0;">Customer #{{ customer.id }} Summary</h2>
+      <span class="seg-badge {% if customer.segment == 'VIP' %}seg-vip{% elif customer.segment == 'Regular' %}seg-reg{% else %}seg-risk{% endif %} mt-1">
+        <span class="dot"></span>{{ customer.segment }}
+      </span>
+    </div>
+    <div class="d-flex gap-4 text-end">
+      <div>
+        <div style="font-size:0.68rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Recency</div>
+        <div class="fw-bold text-dark">{{ customer.recency }} days</div>
+      </div>
+      <div>
+        <div style="font-size:0.68rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Frequency</div>
+        <div class="fw-bold text-dark">{{ customer.frequency }} orders</div>
+      </div>
+      <div>
+        <div style="font-size:0.68rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Monetary Spend</div>
+        <div class="profile-ltv-value text-indigo" style="font-size: 1.25rem;">{{ customer.monetary }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Action Cards Grid -->
+<div class="row g-4">
+  <div class="col-12">
+    <div class="panel-header" style="margin-bottom:0;">
+      <h3 class="panel-title"><i class="bi bi-lightning-charge" style="color:var(--primary);"></i> Recommended Strategic Actions</h3>
+    </div>
+  </div>
+  
+  {% for action in actions %}
+  <div class="col-md-4">
+    <div class="panel-card h-100 d-flex flex-column" style="margin-bottom: 0;">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <span class="nba-priority-badge {% if action.priority == 'High' %}nba-high{% elif action.priority == 'Medium' %}nba-medium{% else %}nba-low{% endif %}">
+          {{ action.priority }} Priority
+        </span>
+        <div class="fw-bold" style="font-size: 0.8rem; color:var(--primary);">Impact: {{ action.impact_score }}%</div>
+      </div>
+
+      <h4 class="text-dark fw-bold mb-2" style="font-size:1rem; font-family:'Inter', sans-serif;">{{ action.title }}</h4>
+      <p class="text-secondary small mb-4" style="line-height: 1.5; font-size:0.8rem;">{{ action.description }}</p>
+
+      <div class="mt-auto pt-3" style="border-top: 1px solid var(--border-dark);">
+        <div class="progress-bar-wrap mb-0">
+          <div class="progress-bar-info">
+            <span>Action Weight</span>
+            <span>{{ action.impact_score }}%</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill {% if action.priority == 'High' %}bg-danger{% elif action.priority == 'Medium' %}bg-warning{% else %}bg-success{% endif %}" 
+                 style="--progress-width: {{ action.impact_score }}%; --progress-bg: {% if action.priority == 'High' %}var(--rose){% elif action.priority == 'Medium' %}var(--amber){% else %}var(--emerald){% endif %};"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endif %}
+{% endblock %}

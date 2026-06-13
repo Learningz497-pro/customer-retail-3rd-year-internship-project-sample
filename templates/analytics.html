@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Analytics — Smart Retail{% endblock %}
+{% block breadcrumb %}Sales Performance{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="page-eyebrow">📊 Deep Dive</div>
+  <h1>Analytics Insights</h1>
+  <p>Interactive cluster distributions, RFM metrics, and revenue intelligence plots.</p>
+</div>
+
+{% if error %}
+<div class="alert-box alert-warn">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  <span>Customer data is unavailable — please check that <code>customer_segments.csv</code> is present.</span>
+</div>
+{% else %}
+
+<!-- Tab Navigation -->
+<div class="tab-nav" role="tablist">
+  <button class="tab-btn active" id="tab-overview" type="button" role="tab" aria-selected="true">
+    <i class="bi bi-pie-chart"></i> Segment Overview
+  </button>
+  <button class="tab-btn" id="tab-rfm" type="button" role="tab" aria-selected="false">
+    <i class="bi bi-bar-chart"></i> RFM Distributions
+  </button>
+  <button class="tab-btn" id="tab-revenue" type="button" role="tab" aria-selected="false">
+    <i class="bi bi-currency-rupee"></i> Revenue Performance
+  </button>
+</div>
+
+<!-- Tab Content Panels -->
+<div class="tab-content">
+
+  <!-- TAB 1: OVERVIEW -->
+  <div class="tab-pane" id="overview" style="display: block;">
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title"><i class="bi bi-pie-chart-fill" style="color:var(--primary);"></i> Segment Groupings</h3>
+          </div>
+          <div id="chartPie" class="chart-wrap"></div>
+        </div>
+      </div>
+      
+      <div class="col-lg-6">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title"><i class="bi bi-trophy-fill" style="color:var(--amber);"></i> Top 10 Spending Customers</h3>
+          </div>
+          <div id="chartTop" class="chart-wrap"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: RFM ANALYSIS -->
+  <div class="tab-pane" id="rfm" style="display: none;">
+    <div class="row g-4 mb-4">
+      <div class="col-12">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title"><i class="bi bi-calendar-event" style="color:var(--cyan);"></i> Recency Distribution (Days since last purchase)</h3>
+          </div>
+          <div id="chartRec" class="chart-wrap"></div>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title"><i class="bi bi-arrow-repeat" style="color:var(--purple);"></i> Frequency Distribution (Total orders placed)</h3>
+          </div>
+          <div id="chartFrq" class="chart-wrap"></div>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title"><i class="bi bi-box" style="color:var(--emerald);"></i> Monetary Box Distribution by Segment</h3>
+          </div>
+          <div id="chartBox" class="chart-wrap"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: REVENUE INTELLIGENCE -->
+  <div class="tab-pane" id="revenue" style="display: none;">
+    <div class="row g-4 mb-4">
+      <div class="col-12">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title"><i class="bi bi-scatter-chart" style="color:var(--indigo);"></i> Recency vs. Spend Scatter Plot</h3>
+          </div>
+          <div id="chartScat" class="chart-wrap"></div>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title"><i class="bi bi-grid-3x3-gap-fill" style="color:var(--purple);"></i> Revenue Contributions Treemap (Top 20 Customers)</h3>
+          </div>
+          <div id="chartTree" class="chart-wrap"></div>
+        </div>
+      </div>
+      
+      <div class="col-12">
+        <div class="panel-card">
+          <div class="panel-header">
+            <h3 class="panel-title"><i class="bi bi-bar-chart-fill" style="color:var(--emerald);"></i> Average Lifetime Spend by Order Frequency</h3>
+          </div>
+          <div id="chartBkt" class="chart-wrap"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block page_scripts %}
+<script type="application/json" id="_pieData">{{ chart_pie | safe }}</script>
+<script type="application/json" id="_topData">{{ chart_top | safe }}</script>
+<script type="application/json" id="_recData">{{ chart_rec | safe }}</script>
+<script type="application/json" id="_frqData">{{ chart_frq | safe }}</script>
+<script type="application/json" id="_boxData">{{ chart_box | safe }}</script>
+<script type="application/json" id="_scatData">{{ chart_scat | safe }}</script>
+<script type="application/json" id="_treeData">{{ chart_tree | safe }}</script>
+<script type="application/json" id="_bktData">{{ chart_bkt | safe }}</script>
+
+<script>
+  // Tab Switching Logic (Fixing original tab-switching panel ID bug)
+  const tabs = {
+    'tab-overview': 'overview',
+    'tab-rfm': 'rfm',
+    'tab-revenue': 'revenue'
+  };
+  const rendered = {};
+
+  function activateTab(id) {
+    // Update active tab buttons styling
+    Object.keys(tabs).forEach(btnId => {
+      document.getElementById(btnId).classList.toggle('active', btnId === id);
+    });
+    // Update visibility of tab content panels
+    Object.values(tabs).forEach(panelId => {
+      document.getElementById(panelId).style.display = 'none';
+    });
+    document.getElementById(tabs[id]).style.display = 'block';
+
+    // Lazy render Plotly charts on tab activation
+    if (!rendered[id]) {
+      rendered[id] = true;
+      if (id === 'tab-overview') {
+        renderChart('chartPie', document.getElementById('_pieData').textContent);
+        renderChart('chartTop', document.getElementById('_topData').textContent);
+      } else if (id === 'tab-rfm') {
+        renderChart('chartRec', document.getElementById('_recData').textContent);
+        renderChart('chartFrq', document.getElementById('_frqData').textContent);
+        renderChart('chartBox', document.getElementById('_boxData').textContent);
+      } else if (id === 'tab-revenue') {
+        renderChart('chartScat', document.getElementById('_scatData').textContent);
+        renderChart('chartTree', document.getElementById('_treeData').textContent);
+        renderChart('chartBkt', document.getElementById('_bktData').textContent);
+      }
+    }
+  }
+
+  // Bind click event listeners to tabs
+  Object.keys(tabs).forEach(btnId => {
+    document.getElementById(btnId).addEventListener('click', () => {
+      activateTab(btnId);
+    });
+  });
+
+  // Activate default overview tab on initialization
+  document.addEventListener("DOMContentLoaded", () => {
+    activateTab('tab-overview');
+  });
+</script>
+{% endblock %}

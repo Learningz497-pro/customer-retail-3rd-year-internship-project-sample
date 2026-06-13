@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retailer Portal — Smart Retail</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Bootstrap 5 Grid & Utilities -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap-grid.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+  <style>
+    body {
+      background: var(--bg-page);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      padding: 1rem;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .login-card {
+      background: #ffffff;
+      border: 1px solid var(--border-dark);
+      border-radius: var(--r-lg);
+      padding: 2.5rem;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--active-glow-gradient, linear-gradient(90deg, var(--indigo), var(--purple)));
+    }
+
+    .login-logo {
+      width: 52px; height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--indigo), var(--purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin: 0 auto 1rem;
+      color: white;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    }
+
+    .retailer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: #f5f3ff;
+      border: 1px solid #ddd6fe;
+      color: #7c3aed;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      margin-bottom: 1.25rem;
+    }
+
+    .login-header h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 0.45rem;
+      text-align: center;
+    }
+
+    .login-header p {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+
+    .login-tabs {
+      display: flex;
+      background: #f3f4f6;
+      padding: 4px;
+      border-radius: var(--r-sm);
+      margin-bottom: 1.5rem;
+    }
+
+    .login-tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .login-tab-btn.active {
+      background: #ffffff;
+      color: var(--text-primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .form-label-custom {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+      display: block;
+    }
+
+    .forgot-link {
+      font-size: 0.75rem;
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .forgot-link:hover {
+      text-decoration: underline;
+    }
+
+    .divider-text {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 1.5rem 0;
+    }
+
+    .divider-text::before,
+    .divider-text::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    .divider-text:not(:empty)::before { margin-right: 1rem; }
+    .divider-text:not(:empty)::after { margin-left: 1rem; }
+
+    .integration-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+
+    .integration-btn {
+      background: #fafafa;
+      border: 1px solid var(--border-dark);
+      border-radius: var(--r-sm);
+      padding: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .integration-btn:hover {
+      background: #f3f4f6;
+      border-color: #cbd5e1;
+      color: var(--text-primary);
+    }
+
+    .loading-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #ffffff;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .spinner-ring {
+      display: inline-block;
+      position: relative;
+      width: 60px; height: 60px;
+      margin-bottom: 1.5rem;
+    }
+    
+    .spinner-ring div {
+      box-sizing: border-box;
+      display: block;
+      position: absolute;
+      width: 48px; height: 48px;
+      margin: 6px;
+      border: 4px solid var(--indigo);
+      border-radius: 50%;
+      animation: spinner-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      border-color: var(--indigo) transparent transparent transparent;
+    }
+    @keyframes spinner-ring {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .spinner-ring div:nth-child(1) { animation-delay: -0.45s; }
+    .spinner-ring div:nth-child(2) { animation-delay: -0.3s; }
+    .spinner-ring div:nth-child(3) { animation-delay: -0.15s; }
+
+    .loader-status {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    .loader-progress-track {
+      width: 160px; height: 4px;
+      background: #f3f4f6;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .loader-progress-fill {
+      height: 100%; width: 0%;
+      background: var(--primary);
+      border-radius: 99px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-card" id="loginCard">
+      
+      <!-- Loading Screen Overlay -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-ring">
+          <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="loader-status" id="loaderStatus">Initializing secure session...</div>
+        <div class="loader-progress-track">
+          <div class="loader-progress-fill" id="loaderProgress"></div>
+        </div>
+      </div>
+
+      <!-- Header -->
+      <div class="text-center">
+        <div class="login-logo">🛍️</div>
+        <div class="retailer-badge"><i class="bi bi-shield-lock-fill"></i> Secure Retailer Node</div>
+      </div>
+      
+      <div class="login-header">
+        <h2>Welcome Back</h2>
+        <p>Access your isolated customer segments and product recommendation insights</p>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="login-tabs">
+        <button class="login-tab-btn active" id="tabSignIn" onclick="switchTab('signin')">Retailer Sign In</button>
+        <button class="login-tab-btn" id="tabSignUp" onclick="switchTab('signup')">Create Account</button>
+      </div>
+
+      <!-- Form Inputs -->
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+        
+        <!-- Store Selector -->
+        <div class="mb-3">
+          <label class="form-label-custom" for="storeSelector">Select Retailer Instance</label>
+          <div class="input-group-custom">
+            <select id="storeSelector" class="select-custom" required onchange="handleStoreChange()">
+              <option value="apex" data-gradient="linear-gradient(90deg, #4f46e5, #a855f7)">Apex Retail Group (Global)</option>
+              <option value="vertex" data-gradient="linear-gradient(90deg, #06b6d4, #10b981)">Vertex Boutique LLC</option>
+              <option value="pulse" data-gradient="linear-gradient(90deg, #ef4444, #f59e0b)">Pulse Superstores Inc</option>
+              <option value="local" data-gradient="linear-gradient(90deg, #4f46e5, #a855f7)">Eugene Lamar (Sandbox)</option>
+            </select>
+            <i class="bi bi-shop"></i>
+          </div>
+        </div>
+
+        <!-- Username / Email -->
+        <div class="mb-3">
+          <label class="form-label-custom" for="retailerEmail" id="emailLabel">Business ID or Email</label>
+          <div class="input-group-custom">
+            <input 
+              type="text" 
+              id="retailerEmail" 
+              class="form-input-custom" 
+              placeholder="e.g. manager@apexretail.com" 
+              required
+            >
+            <i class="bi bi-envelope"></i>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label-custom m-0" for="retailerPassword">Access Password</label>
+            <a href="#" class="forgot-link" onclick="forgotPassword(event)">Forgot Key?</a>
+          </div>
+          <div class="input-group-custom">
+            <input 
+              type="password" 
+              id="retailerPassword" 
+              class="form-input-custom" 
+              placeholder="••••••••••••" 
+              required
+            >
+            <i class="bi bi-lock"></i>
+          </div>
+        </div>
+
+        <!-- Submission Trigger -->
+        <button type="submit" class="btn-indigo w-100 py-2 mt-3" id="submitBtn" style="font-size:0.9rem;">
+          <i class="bi bi-box-arrow-in-right"></i> <span id="btnText">Sign In to Instance</span>
+        </button>
+
+      </form>
+
+      <!-- Quick platform buttons -->
+      <div class="divider-text" id="dividerText">Or Quick Integrations</div>
+
+      <div class="integration-grid" id="integrationGrid">
+        <div class="integration-btn" onclick="quickConnect('Shopify')">
+          <i class="bi bi-bag-heart-fill" style="color: #96bf48; font-size:1.15rem;"></i>
+          <span>Shopify</span>
+        </div>
+        <div class="integration-btn" onclick="quickConnect('Square')">
+          <i class="bi bi-app" style="color: #111; font-size:1.15rem;"></i>
+          <span>Square</span>
+        </div>
+        <div class="integration-btn" onclick="quickConnect('WooCommerce')">
+          <i class="bi bi-cart-fill" style="color: #96588a; font-size:1.15rem;"></i>
+          <span>WooCommerce</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let currentTab = 'signin';
+
+    function handleStoreChange() {
+      const select = document.getElementById('storeSelector');
+      const card = document.getElementById('loginCard');
+      const opt = select.options[select.selectedIndex];
+      const gradient = opt.getAttribute('data-gradient');
+      card.style.setProperty('--active-glow-gradient', gradient);
+    }
+
+    function switchTab(tab) {
+      if (currentTab === tab) return;
+      currentTab = tab;
+
+      const tabSignIn = document.getElementById('tabSignIn');
+      const tabSignUp = document.getElementById('tabSignUp');
+      const emailLabel = document.getElementById('emailLabel');
+      const retailerEmail = document.getElementById('retailerEmail');
+      const btnText = document.getElementById('btnText');
+      const dividerText = document.getElementById('dividerText');
+      const integrationGrid = document.getElementById('integrationGrid');
+
+      if (tab === 'signin') {
+        tabSignIn.classList.add('active');
+        tabSignUp.classList.remove('active');
+        emailLabel.textContent = "Business ID or Email";
+        retailerEmail.placeholder = "e.g. manager@apexretail.com";
+        btnText.textContent = "Sign In to Instance";
+        dividerText.style.display = 'flex';
+        integrationGrid.style.display = 'flex';
+      } else {
+        tabSignIn.classList.remove('active');
+        tabSignUp.classList.add('active');
+        emailLabel.textContent = "Owner Email";
+        retailerEmail.placeholder = "e.g. register@mybrand.com";
+        btnText.textContent = "Create Retailer Instance";
+        dividerText.style.display = 'none';
+        integrationGrid.style.display = 'none';
+      }
+    }
+
+    function handleLoginSubmit(event) {
+      event.preventDefault();
+      
+      const store = document.getElementById('storeSelector');
+      const storeText = store.options[store.selectedIndex].text;
+      const email = document.getElementById('retailerEmail').value;
+      
+      // Extract name from Email/Text
+      let name = "Eugene Lamar";
+      if (store.value === 'apex') {
+        name = "Apex Retailer";
+      } else if (store.value === 'vertex') {
+        name = "Vertex Manager";
+      } else if (store.value === 'pulse') {
+        name = "Pulse Controller";
+      } else {
+        // Fallback to name extraction from email
+        const parts = email.split('@')[0].split('.');
+        if (parts.length > 0) {
+          name = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+        }
+      }
+
+      localStorage.setItem('retailer_org', name);
+      localStorage.setItem('retailer_email', email);
+      localStorage.setItem('is_logged_in', 'true');
+
+      const overlay = document.getElementById('loadingOverlay');
+      const status = document.getElementById('loaderStatus');
+      const fill = document.getElementById('loaderProgress');
+      
+      overlay.classList.add('active');
+
+      const steps = [
+        { text: "Securing connection tunnels...", duration: 300 },
+        { text: `Contacting ${storeText} partition...`, duration: 400 },
+        { text: "Validating credentials...", duration: 300 },
+        { text: "Syncing dashboard metrics...", duration: 300 }
+      ];
+
+      let currentStep = 0;
+      let progress = 0;
+      
+      function runNextStep() {
+        if (currentStep >= steps.length) {
+          fill.style.width = '100%';
+          setTimeout(() => {
+            window.location.href = "{{ url_for('dashboard') }}";
+          }, 150);
+          return;
+        }
+        
+        const step = steps[currentStep];
+        status.textContent = step.text;
+        
+        let stepProgress = 0;
+        const stepInterval = 16;
+        const progressIncrement = (stepInterval / step.duration) * (100 / steps.length);
+        
+        const interval = setInterval(() => {
+          progress += progressIncrement;
+          if (progress > 100) progress = 100;
+          fill.style.width = `${progress}%`;
+          
+          stepProgress += stepInterval;
+          if (stepProgress >= step.duration) {
+            clearInterval(interval);
+            currentStep++;
+            runNextStep();
+          }
+        }, stepInterval);
+      }
+
+      runNextStep();
+    }
+
+    function quickConnect(platform) {
+      const overlay = document.getElementById('loadingOverlay');
+      const status = document.getElementById('loaderStatus');
+      const fill = document.getElementById('loaderProgress');
+
+      localStorage.setItem('retailer_org', `${platform} Manager`);
+      localStorage.setItem('retailer_email', `integration@${platform.toLowerCase()}.com`);
+      localStorage.setItem('is_logged_in', 'true');
+
+      overlay.classList.add('active');
+
+      const steps = [
+        { text: `Connecting via secure OAuth to ${platform}...`, duration: 400 },
+        { text: "Pulling transactional catalog...", duration: 400 },
+        { text: "Sync complete. Redirecting...", duration: 200 }
+      ];
+
+      let currentStep = 0;
+      let progress = 0;
+
+      function runNextStep() {
+        if (currentStep >= steps.length) {
+          fill.style.width = '100%';
+          setTimeout(() => {
+            window.location.href = "{{ url_for('dashboard') }}";
+          }, 150);
+          return;
+        }
+
+        const step = steps[currentStep];
+        status.textContent = step.text;
+
+        let stepProgress = 0;
+        const stepInterval = 16;
+        const progressIncrement = (stepInterval / step.duration) * (100 / steps.length);
+
+        const interval = setInterval(() => {
+          progress += progressIncrement;
+          if (progress > 100) progress = 100;
+          fill.style.width = `${progress}%`;
+
+          stepProgress += stepInterval;
+          if (stepProgress >= step.duration) {
+            clearInterval(interval);
+            currentStep++;
+            runNextStep();
+          }
+        }, stepInterval);
+      }
+
+      runNextStep();
+    }
+
+    function forgotPassword(e) {
+      e.preventDefault();
+      alert("Verification link sent. Please check store administrator mailbox.");
+    }
+  </script>
+</body>
+</html>

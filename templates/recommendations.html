@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Product Recommendations — Smart Retail{% endblock %}
+{% block breadcrumb %}Product Recommendations{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="page-eyebrow">🤖 AI Recommendations</div>
+  <h1>Product Recommendations</h1>
+  <p>Discover which products customers frequently buy together using association rule mining.</p>
+</div>
+
+<!-- Product Selector -->
+<div class="search-panel">
+  <div class="search-title">Select a Product</div>
+  <div class="search-sub">Choose a product to see the top items frequently bought alongside it, ranked by Lift score.</div>
+  <form method="POST" action="{{ url_for('recommendations') }}" id="recForm">
+    <div class="search-row flex-wrap gap-2">
+      <div style="flex:1; min-width:220px; max-width:420px;">
+        <select name="product" class="select-custom" id="productSelect" onchange="this.form.submit()">
+          <option value="">— Choose a Product —</option>
+          {% for p in all_products %}
+          <option value="{{ p }}" {% if selected and p == selected %}selected{% endif %}>{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn-indigo">
+        <i class="bi bi-stars"></i> Get Recommendations
+      </button>
+      {% if selected %}
+      <a href="{{ url_for('recommendations') }}" class="btn-ghost">
+        <i class="bi bi-x-circle"></i> Clear
+      </a>
+      {% endif %}
+      <div class="search-range-hint ms-auto">
+        <i class="bi bi-list-ul me-1"></i>
+        <strong>{{ all_products|length }}</strong> products available
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Warning -->
+{% if rec_warning %}
+<div class="alert-box alert-warn mb-3">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  <span>{{ rec_warning }}</span>
+</div>
+{% endif %}
+
+<!-- No product selected — overview stats -->
+{% if not selected %}
+{% if overview %}
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="metric-card card-blue">
+      <div class="metric-card-info">
+        <span class="metric-card-lbl">Total Mining Rules</span>
+        <h2 class="metric-card-val">{{ overview.total }}</h2>
+        <span class="metric-card-delta" style="color:var(--text-secondary);">rules compiled in model</span>
+      </div>
+      <div class="metric-card-icon"><i class="bi bi-gear-fill"></i></div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="metric-card card-purple">
+      <div class="metric-card-info">
+        <span class="metric-card-lbl">Max Association Lift</span>
+        <h2 class="metric-card-val">{{ overview.max_lift }}×</h2>
+        <span class="metric-card-delta" style="color:var(--text-secondary);">strongest correlation strength</span>
+      </div>
+      <div class="metric-card-icon"><i class="bi bi-lightning-fill"></i></div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="metric-card card-green">
+      <div class="metric-card-info">
+        <span class="metric-card-lbl">Average Confidence</span>
+        <h2 class="metric-card-val">{{ overview.avg_conf }}</h2>
+        <span class="metric-card-delta" style="color:var(--text-secondary);">average probability confidence</span>
+      </div>
+      <div class="metric-card-icon"><i class="bi bi-bullseye"></i></div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="panel-card">
+  <div class="empty-state py-5" style="text-align: center;">
+    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;">🛒</div>
+    <h3>Select a Product Above</h3>
+    <p class="text-muted" style="max-width: 420px; margin: 0 auto;">Pick any product from the dropdown to see which items are most frequently bought alongside it, ranked by Lift score.</p>
+  </div>
+</div>
+{% endif %}
+
+<!-- Results -->
+{% if selected and rec_cards %}
+
+<!-- Stats cards -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="metric-card card-blue">
+      <div class="metric-card-info">
+        <span class="metric-card-lbl">Matches Found</span>
+        <h2 class="metric-card-val">{{ stats.count }}</h2>
+        <span class="metric-card-delta positive"><i class="bi bi-arrow-up-short"></i> Products matched</span>
+      </div>
+      <div class="metric-card-icon"><i class="bi bi-box-seam"></i></div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="metric-card card-purple">
+      <div class="metric-card-info">
+        <span class="metric-card-lbl">Max Lift Score</span>
+        <h2 class="metric-card-val">{{ stats.max_lift }}×</h2>
+        <span class="metric-card-delta positive"><i class="bi bi-arrow-up-short"></i> Strongest connection</span>
+      </div>
+      <div class="metric-card-icon"><i class="bi bi-lightning-fill"></i></div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="metric-card card-green">
+      <div class="metric-card-info">
+        <span class="metric-card-lbl">Avg Confidence</span>
+        <h2 class="metric-card-val">{{ stats.avg_conf }}</h2>
+        <span class="metric-card-delta positive"><i class="bi bi-arrow-up-short"></i> Rule reliability</span>
+      </div>
+      <div class="metric-card-icon"><i class="bi bi-check-circle-fill"></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- Selected label -->
+<div class="rec-label-bar mb-3">
+  Showing recommendations for: <strong>{{ selected }}</strong>
+</div>
+
+<!-- Cards + Chart -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="panel-card h-100">
+      <div class="panel-header">
+        <h3 class="panel-title"><i class="bi bi-bag-check" style="color:var(--primary);"></i> Recommended Products</h3>
+      </div>
+      
+      <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top: 0.5rem;">
+        {% for card in rec_cards %}
+        <div class="rec-card">
+          <span class="rec-rank">#{{ card.rank }}</span>
+          <span class="rec-name">{{ card.product }}</span>
+          <span class="rec-lift"><i class="bi bi-lightning-fill" style="font-size:0.75rem;"></i> {{ card.lift }}×</span>
+          <div class="rec-cbar">
+            <div class="rec-cfill" style="--rec-width: {{ card.conf_pct }}%;"></div>
+          </div>
+          <span class="rec-cpct">{{ card.conf }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-6">
+    <div class="panel-card h-100">
+      <div class="panel-header">
+        <h3 class="panel-title"><i class="bi bi-bar-chart-steps" style="color:var(--primary);"></i> Lift Score Comparison</h3>
+      </div>
+      <div id="liftChart" class="chart-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Rules Table -->
+<div class="panel-card">
+  <div class="panel-header">
+    <h3 class="panel-title"><i class="bi bi-table"></i> Complete Rules Dataset</h3>
+  </div>
+  <div class="table-wrap">
+    <table class="custom-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Recommended Product</th>
+          <th>Confidence</th>
+          <th>Lift Score</th>
+          <th>Support</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for card in rec_cards %}
+        <tr>
+          <td>#{{ card.rank }}</td>
+          <td class="fw-semibold text-dark">{{ card.product }}</td>
+          <td>{{ card.conf }}</td>
+          <td class="fw-bold" style="color:var(--primary);">{{ card.lift }}×</td>
+          <td>{{ card.support }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block page_scripts %}
+{% if chart_lift %}
+<script type="application/json" id="_liftData">{{ chart_lift | safe }}</script>
+<script>
+  renderChart('liftChart', document.getElementById('_liftData').textContent);
+</script>
+{% endif %}
+{% endblock %}

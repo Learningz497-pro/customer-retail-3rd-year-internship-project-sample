@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Smart Retail Analytics{% endblock %}</title>
+  <meta name="description" content="Smart Retail Customer Analytics — segment insights, product recommendations, and revenue intelligence.">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Bootstrap 5 Grid & Utilities Only (to avoid overriding layout CSS) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap-grid.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  <script>
+    (function() {
+      const storedTheme = localStorage.getItem('theme') || 'light';
+      if (storedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+<div class="app-wrapper" id="appWrapper">
+  <script>
+    if (localStorage.getItem('sidebar-collapsed') === 'true') {
+      document.getElementById('appWrapper').classList.add('collapsed');
+    }
+  </script>
+  <!-- Left Column: Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a href="{{ url_for('dashboard') }}" class="sidebar-brand" style="display: flex; align-items: center; gap: 0.65rem; text-decoration: none;">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
+        <div class="sidebar-brand-details">
+          <span class="sidebar-brand-text" style="font-size: 0.95rem; font-weight: 800; display: block; line-height: 1.1;">Smart Retail</span>
+          <span style="font-size: 0.62rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; display: block; line-height: 1; margin-top: 0.1rem;">Analytics Platform</span>
+        </div>
+      </a>
+      <button class="topbar-btn" id="sidebarToggleBtn" style="width: 32px; height: 32px; font-size: 0.85rem;" title="Toggle View" onclick="toggleSidebar()">
+        <i class="bi bi-layout-sidebar"></i>
+      </button>
+    </div>
+
+    <!-- Main Navigation -->
+    <div class="sidebar-nav-section">
+      <div class="sidebar-nav-title">Main Navigation</div>
+      <ul class="sidebar-nav-list">
+        <li>
+          <a href="{{ url_for('dashboard') }}" class="sidebar-link {% if active_page == 'dashboard' %}active{% endif %}">
+            <i class="bi bi-grid-fill"></i>
+            <span>Dashboards</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('insights') }}" class="sidebar-link {% if active_page == 'insights' %}active{% endif %}">
+            <i class="bi bi-people"></i>
+            <span>Customers</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('recommendations') }}" class="sidebar-link {% if active_page == 'recommendations' %}active{% endif %}">
+            <i class="bi bi-bag"></i>
+            <span>Orders</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('recommendations') }}" class="sidebar-link {% if active_page == 'recommendations' %}active{% endif %}">
+            <i class="bi bi-box"></i>
+            <span>Products</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('update_db') }}" class="sidebar-link {% if active_page == 'update_db' %}active{% endif %}">
+            <i class="bi bi-arrow-left-right"></i>
+            <span>Transactions</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Growth Tools -->
+    <div class="sidebar-nav-section">
+      <div class="sidebar-nav-title">Growth Tools</div>
+      <ul class="sidebar-nav-list">
+        <li>
+          <a href="{{ url_for('nba_route') }}" class="sidebar-link {% if active_page == 'nba' %}active{% endif %}">
+            <i class="bi bi-bullseye"></i>
+            <span>Goals & Target</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('analytics') }}" class="sidebar-link {% if active_page == 'analytics' %}active{% endif %}">
+            <i class="bi bi-graph-up"></i>
+            <span>Sales Performance</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('recommendations') }}" class="sidebar-link">
+            <i class="bi bi-tags"></i>
+            <span>Marketing</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Bottom Footer Profile Section -->
+    <div class="sidebar-footer">
+      <ul class="sidebar-nav-list">
+        <li>
+          <a href="#" class="sidebar-link" onclick="alert('Help Center is currently online. How can we help you?')">
+            <i class="bi bi-question-circle"></i>
+            <span>Help Center</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('update_db') }}" class="sidebar-link">
+            <i class="bi bi-gear"></i>
+            <span>Settings</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- User Profile Badge -->
+      <div class="sidebar-profile">
+        <div class="profile-avatar-img">EL</div>
+        <div class="profile-info">
+          <div class="profile-name" id="sbRetailerOrg">Eugene Lamar</div>
+          <div class="profile-email" id="sbRetailerEmail">euglamar@xain.com</div>
+        </div>
+        <a href="#" onclick="handleLogout(event)" class="text-danger" title="Logout" style="text-decoration: none;">
+          <i class="bi bi-box-arrow-left"></i>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Column: Main Content -->
+  <main class="main-content">
+    <header class="topbar">
+      <div class="breadcrumbs">
+        <a href="{{ url_for('dashboard') }}">Dashboards</a>
+        <span class="separator">&gt;</span>
+        <span class="current">{% block breadcrumb %}{{ active_page|capitalize }}{% endblock %}</span>
+      </div>
+      
+      <div class="topbar-actions">
+        <!-- Search bar -->
+        <div class="topbar-search">
+          <i class="bi bi-search topbar-search-icon"></i>
+          <input type="text" placeholder="Search..." class="topbar-search-input" />
+        </div>
+        
+        <!-- Notification bell -->
+        <button class="topbar-btn" title="Notifications" onclick="alert('No new notifications.')">
+          <i class="bi bi-bell"></i>
+        </button>
+        
+        <!-- Theme Toggle button -->
+        <button class="topbar-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme" style="border-radius: 50%;" onclick="toggleTheme()">
+          <i class="bi bi-moon" id="themeToggleIcon"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="content-inner">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+<script>
+  /* Plotly chart renderer with automatic light/dark layout parameters injection */
+  function renderChart(id, jsonStr, opts) {
+    if (!jsonStr || !id) return;
+    const container = document.getElementById(id);
+    if (!container) return;
+    const fig = JSON.parse(jsonStr);
+    
+    // Auto-adjust layout parameters based on active theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    fig.layout = fig.layout || {};
+    fig.layout.font = fig.layout.font || {};
+    fig.layout.font.color = isDark ? '#cbd5e1' : '#4b5563';
+    
+    if (fig.layout.title) {
+      if (typeof fig.layout.title === 'string') {
+        fig.layout.title = { text: fig.layout.title, font: {} };
+      }
+      fig.layout.title.font = fig.layout.title.font || {};
+      fig.layout.title.font.color = isDark ? '#f8fafc' : '#111827';
+    }
+    
+    if (fig.layout.xaxis) {
+      fig.layout.xaxis.gridcolor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+      fig.layout.xaxis.linecolor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+      fig.layout.xaxis.zerolinecolor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+      if (fig.layout.xaxis.tickfont) fig.layout.xaxis.tickfont.color = isDark ? '#cbd5e1' : '#4b5563';
+    }
+    
+    if (fig.layout.yaxis) {
+      fig.layout.yaxis.gridcolor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+      fig.layout.yaxis.linecolor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+      fig.layout.yaxis.zerolinecolor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+      if (fig.layout.yaxis.tickfont) fig.layout.yaxis.tickfont.color = isDark ? '#cbd5e1' : '#4b5563';
+    }
+    
+    if (fig.layout.legend) {
+      fig.layout.legend.bgcolor = isDark ? 'rgba(15,23,42,0.9)' : 'rgba(255,255,255,0.9)';
+      fig.layout.legend.bordercolor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+      fig.layout.legend.font = fig.layout.legend.font || {};
+      fig.layout.legend.font.color = isDark ? '#cbd5e1' : '#4b5563';
+    }
+    
+    const config = Object.assign({ responsive: true, displayModeBar: false }, opts || {});
+    Plotly.newPlot(id, fig.data, fig.layout, config);
+  }
+
+  /* Define global toggle handlers to be resilient against DOMContentLoaded event timing */
+  function toggleTheme() {
+    const currentlyDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const newTheme = currentlyDark ? 'light' : 'dark';
+    const toggleIcon = document.getElementById('themeToggleIcon');
+    
+    if (newTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('theme', 'dark');
+      if (toggleIcon) toggleIcon.className = 'bi bi-sun';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('theme', 'light');
+      if (toggleIcon) toggleIcon.className = 'bi bi-moon';
+    }
+    
+    // Dynamically update active Plotly charts
+    document.querySelectorAll('.chart-wrap').forEach(container => {
+      if (container && container.layout) {
+        const isDarkNow = newTheme === 'dark';
+        const updatedLayout = {
+          'font.color': isDarkNow ? '#cbd5e1' : '#4b5563',
+          'title.font.color': isDarkNow ? '#f8fafc' : '#111827',
+          'xaxis.gridcolor': isDarkNow ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+          'xaxis.linecolor': isDarkNow ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+          'xaxis.zerolinecolor': isDarkNow ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+          'xaxis.tickfont.color': isDarkNow ? '#cbd5e1' : '#4b5563',
+          'yaxis.gridcolor': isDarkNow ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+          'yaxis.linecolor': isDarkNow ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+          'yaxis.zerolinecolor': isDarkNow ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+          'yaxis.tickfont.color': isDarkNow ? '#cbd5e1' : '#4b5563',
+          'legend.bgcolor': isDarkNow ? 'rgba(15,23,42,0.9)' : 'rgba(255,255,255,0.9)',
+          'legend.bordercolor': isDarkNow ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+          'legend.font.color': isDarkNow ? '#cbd5e1' : '#4b5563',
+        };
+        Plotly.update(container, {}, updatedLayout);
+      }
+    });
+  }
+
+  function toggleSidebar() {
+    const appWrapper = document.getElementById('appWrapper');
+    if (!appWrapper) return;
+    const currentlyCollapsed = appWrapper.classList.toggle('collapsed');
+    localStorage.setItem('sidebar-collapsed', currentlyCollapsed ? 'true' : 'false');
+    
+    // Trigger Plotly chart resize immediately and after transition completes
+    const resizeCharts = () => {
+      document.querySelectorAll('.chart-wrap').forEach(container => {
+        if (container && typeof Plotly !== 'undefined' && container.layout) {
+          Plotly.Plots.resize(container);
+        }
+      });
+    };
+    resizeCharts();
+    setTimeout(resizeCharts, 300);
+  }
+
+  /* Run initialization logic as early as possible or when DOM is ready */
+  function runInit() {
+    // Apply saved theme icon state
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const toggleIcon = document.getElementById('themeToggleIcon');
+    if (toggleIcon) {
+      toggleIcon.className = isDark ? 'bi bi-sun' : 'bi bi-moon';
+    }
+
+    const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+    const currentPath = window.location.pathname;
+    
+    if (!isLoggedIn && currentPath !== '/login' && currentPath !== '/') {
+      window.location.href = "{{ url_for('login') }}";
+      return;
+    }
+    
+    if (isLoggedIn) {
+      const org = localStorage.getItem('retailer_org') || "Eugene Lamar";
+      const orgLabel = document.getElementById('sbRetailerOrg');
+      if (orgLabel) {
+        orgLabel.textContent = org;
+      }
+      
+      const email = localStorage.getItem('retailer_email') || "euglamar@xain.com";
+      const emailLabel = document.getElementById('sbRetailerEmail');
+      if (emailLabel) {
+        emailLabel.textContent = email;
+      }
+      
+      // Update initials in avatar
+      const avatar = document.querySelector('.profile-avatar-img');
+      if (avatar && org) {
+        const parts = org.trim().split(/\s+/);
+        let initials = parts[0][0];
+        if (parts.length > 1) {
+          initials += parts[parts.length - 1][0];
+        } else if (org.length > 1) {
+          initials += org[1];
+        }
+        avatar.textContent = initials.toUpperCase();
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener("DOMContentLoaded", runInit);
+  } else {
+    runInit();
+  }
+
+  function handleLogout(e) {
+    e.preventDefault();
+    localStorage.removeItem('is_logged_in');
+    localStorage.removeItem('retailer_org');
+    localStorage.removeItem('retailer_email');
+    window.location.href = "{{ url_for('login') }}";
+  }
+</script>
+
+{% block page_scripts %}{% endblock %}
+
+</body>
+</html>
